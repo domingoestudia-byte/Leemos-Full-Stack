@@ -60,7 +60,7 @@ export default function Navbar({ user }) {
                   <span>+</span> Nueva recomendación
                 </Link>
                 <Link
-                  href="/perfil"
+                  href={user ? `/perfil/${user.username}` : '/login'}
                   className="flex items-center gap-2 group"
                 >
                   <div
