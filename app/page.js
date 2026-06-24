@@ -37,22 +37,36 @@ export default function Home() {
 
   const cargarFeed = async () => {
     try {
-      const { data, error: err } = await supabase
-        .from('recomendaciones_with_likes')
-        .select(`
-          *,
-          profiles(username, avatar_url)
-        `)
+      // 1. Obtener recomendaciones
+      const { data: recs, error: recsErr } = await supabase
+        .from('recomendaciones')
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (err) throw err;
-      // Transformar para que coincida con la estructura esperada
-      const transformed = (data || []).map(r => ({
-        ...r,
-        likes: [{ count: r.likes_count || 0 }],
-        likes_count: r.likes_count || 0,
+      if (recsErr) throw recsErr;
+
+      // 2. Obtener todos los perfiles (para mapear user_id -> username/avatar)
+      const { data: perfiles } = await supabase
+        .from('profiles')
+        .select('*');
+
+      const perfilPorId = {};
+      (perfiles || []).forEach(p => { perfilPorId[p.id] = p; });
+
+      // 3. Para cada recomendación, contar likes
+      const withLikes = await Promise.all((recs || []).map(async (r) => {
+        const { count } = await supabase
+          .from('likes')
+          .select('*', { count: 'exact', head: true })
+          .eq('recomendacion_id', r.id);
+        return {
+          ...r,
+          profiles: perfilPorId[r.user_id] || { username: 'Usuario', avatar_url: null },
+          likes: [{ count: count || 0 }],
+          likes_count: count || 0,
+        };
       }));
-      setRecomendaciones(transformed);
+      setRecomendaciones(withLikes);
     } catch (err) {
       console.error('Error al cargar feed:', err);
       setError('No se pudieron cargar las recomendaciones.');

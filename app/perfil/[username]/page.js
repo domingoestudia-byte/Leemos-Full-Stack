@@ -32,21 +32,29 @@ export default function PerfilPage() {
       setPerfil(perfilData);
 
       const { data: recs, error: recsError } = await supabase
-        .from('recomendaciones_with_likes')
+        .from('recomendaciones')
         .select(`
-          *,
+          id, user_id, titulo_libro, resena, portada_url, created_at,
           profiles(username, avatar_url)
         `)
         .eq('user_id', perfilData.id)
         .order('created_at', { ascending: false });
 
       if (recsError) throw recsError;
-      const transformed = (recs || []).map(r => ({
-        ...r,
-        likes: [{ count: r.likes_count || 0 }],
-        likes_count: r.likes_count || 0,
+
+      // Obtener contadores de likes por separado
+      const conLikes = await Promise.all((recs || []).map(async (r) => {
+        const { count } = await supabase
+          .from('likes')
+          .select('*', { count: 'exact', head: true })
+          .eq('recomendacion_id', r.id);
+        return {
+          ...r,
+          likes: [{ count: count || 0 }],
+          likes_count: count || 0,
+        };
       }));
-      setRecomendaciones(transformed);
+      setRecomendaciones(conLikes);
     } catch (err) {
       console.error('Error al cargar perfil:', err);
       setError('No se pudo cargar el perfil.');
