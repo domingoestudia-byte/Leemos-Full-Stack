@@ -38,16 +38,21 @@ export default function Home() {
   const cargarFeed = async () => {
     try {
       const { data, error: err } = await supabase
-        .from('recomendaciones')
+        .from('recomendaciones_with_likes')
         .select(`
           *,
-          profiles(username, avatar_url),
-          likes(count)
+          profiles(username, avatar_url)
         `)
         .order('created_at', { ascending: false });
 
       if (err) throw err;
-      setRecomendaciones(data || []);
+      // Transformar para que coincida con la estructura esperada
+      const transformed = (data || []).map(r => ({
+        ...r,
+        likes: [{ count: r.likes_count || 0 }],
+        likes_count: r.likes_count || 0,
+      }));
+      setRecomendaciones(transformed);
     } catch (err) {
       console.error('Error al cargar feed:', err);
       setError('No se pudieron cargar las recomendaciones.');

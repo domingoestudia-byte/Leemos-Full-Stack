@@ -32,17 +32,21 @@ export default function PerfilPage() {
       setPerfil(perfilData);
 
       const { data: recs, error: recsError } = await supabase
-        .from('recomendaciones')
+        .from('recomendaciones_with_likes')
         .select(`
           *,
-          profiles(username, avatar_url),
-          likes(count)
+          profiles(username, avatar_url)
         `)
         .eq('user_id', perfilData.id)
         .order('created_at', { ascending: false });
 
       if (recsError) throw recsError;
-      setRecomendaciones(recs || []);
+      const transformed = (recs || []).map(r => ({
+        ...r,
+        likes: [{ count: r.likes_count || 0 }],
+        likes_count: r.likes_count || 0,
+      }));
+      setRecomendaciones(transformed);
     } catch (err) {
       console.error('Error al cargar perfil:', err);
       setError('No se pudo cargar el perfil.');
