@@ -1,0 +1,24 @@
+{
+  "name": "Leemos - Red Social de Libros",
+  "short_name": "Leemos",
+  "description": "Comparte recomendaciones de libros con la comunidad",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f9f6f0",
+  "theme_color": "#b8860b",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
